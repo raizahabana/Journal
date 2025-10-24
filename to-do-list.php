@@ -1,0 +1,555 @@
+<?php
+/*
+  index.php
+  Single-file PHP + JS To-Do in Calendar
+  - Uses MySQLi (change DB credentials below)
+  - Creates table if it doesn't exist
+  - AJAX endpoints: save, fetch, toggle
+  - Client renders a month calendar; tasks appear on their dates
+*/
+// --- CONFIG: change these to match your DB ---
+$db_host = 'localhost';
+$db_user = 'root';
+$db_pass = '';
+$db_name = 'todo_calendar_db';
+// -------------------------------------------------
+
+// create connection
+$mysqli = new mysqli($db_host, $db_user, $db_pass);
+if ($mysqli->connect_error) {
+  die('DB connect error: ' . $mysqli->connect_error);
+}
+// create database if not exists
+$mysqli->query("CREATE DATABASE IF NOT EXISTS `" . $mysqli->real_escape_string($db_name) . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+$mysqli->select_db($db_name);
+// create table if not exists
+$create_sql = "CREATE TABLE IF NOT EXISTS `tasks` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `task_text` TEXT NOT NULL,
+    `task_date` DATE NOT NULL,
+    `completed` TINYINT(1) NOT NULL DEFAULT 0,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+$mysqli->query($create_sql);
+
+// Handle AJAX requests
+$action = $_REQUEST['action'] ?? null;
+if ($action === 'save') {
+  // Save new task
+  $task = trim($_POST['task'] ?? '');
+  $date = $_POST['date'] ?? '';
+  header('Content-Type: application/json');
+  // server-side validation: not blank and date >= today
+  if ($task === '') {
+    echo json_encode(['ok' => false, 'msg' => 'No insert please try again.']);
+    exit;
+  }
+  $d = DateTime::createFromFormat('Y-m-d', $date);
+  $today = new DateTime('today');
+  if (!$d) {
+    echo json_encode(['ok' => false, 'msg' => 'Insert valid date.']);
+    exit;
+  }
+  if ($d < $today) {
+    echo json_encode(['ok' => false, 'msg' => 'Insert valid date.']);
+    exit;
+  }
+  $stmt = $mysqli->prepare("INSERT INTO tasks (task_text, task_date) VALUES (?, ?)");
+  $stmt->bind_param('ss', $task, $date);
+  if ($stmt->execute()) {
+    echo json_encode(['ok' => true, 'msg' => 'Saved']);
+  } else {
+    echo json_encode(['ok' => false, 'msg' => 'Save failed']);
+  }
+  exit;
+}
+
+if ($action === 'fetch') {
+  // fetch tasks for given month/year
+  $month = intval($_GET['month'] ?? (int) date('n'));
+  $year = intval($_GET['year'] ?? (int) date('Y'));
+  $start = sprintf('%04d-%02d-01', $year, $month);
+  $end = (new DateTime($start))->modify('last day of this month')->format('Y-m-d');
+  $sql = "SELECT id, task_text, task_date, completed FROM tasks WHERE task_date BETWEEN ? AND ? ORDER BY task_date, id";
+  $stmt = $mysqli->prepare($sql);
+  $stmt->bind_param('ss', $start, $end);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $items = [];
+  while ($row = $res->fetch_assoc()) {
+    $items[] = $row;
+  }
+  header('Content-Type: application/json');
+  echo json_encode(['ok' => true, 'tasks' => $items]);
+  exit;
+}
+
+if ($action === 'toggle') {
+  // toggle completed status
+  $id = intval($_POST['id'] ?? 0);
+  $completed = intval($_POST['completed'] ?? 0);
+  $stmt = $mysqli->prepare('UPDATE tasks SET completed = ? WHERE id = ?');
+  $stmt->bind_param('ii', $completed, $id);
+  $ok = $stmt->execute();
+  header('Content-Type: application/json');
+  echo json_encode(['ok' => (bool) $ok]);
+  exit;
+}
+
+// If no AJAX action, render the page.
+?>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Calendar To-Do</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --muted: #6b7280;
+      --bg: #f8fafc
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: Inter, Segoe UI, Arial
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #0f172a;
+      padding: 22px
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 18px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(2, 6, 23, 0.08);
+      padding: 18px
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 20px
+    }
+
+    /* input area */
+    .input-area {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .task-input {
+      height: 50px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e6edf3;
+      font-size: 16px
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .controls input[type=date] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #e6edf3
+    }
+
+    .btn {
+      background: var(--accent);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    /* calendar */
+    .calendar {
+      margin-top: 18px
+    }
+
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .month-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .month-title {
+      font-weight: 600
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 7px
+    }
+
+    .day-name {
+      text-align: center;
+      padding: 6px 0;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .cell {
+      min-height: 110px;
+      min-width: 110px;
+      border-radius: 8px;
+      padding: 8px;
+      background: #fbfdff;
+      border: 1px solid #eef2f7;
+      position: relative
+    }
+
+    .cell.inactive {
+      opacity: .35
+    }
+
+    .cell .date-num {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .tasks {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 64px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #eef2f7
+    }
+
+    .task input[type=checkbox] {
+      width: 16px;
+      height: 16px
+    }
+
+    .task .text {
+      flex: 1;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .task.completed .text {
+      text-decoration: line-through;
+      color: var(--muted)
+    }
+
+    /* New view navigation buttons */
+    .view-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: 20px;
+    }
+
+    .view-btn {
+      background: #e6edf3;
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .view-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .view-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Adjustments for task visibility */
+    .task .text {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task .text:hover {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      background: #f0f8ff;
+      padding: 4px;
+      border-radius: 4px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Week and Day view adjustments */
+    .grid.week {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    /* Week view: 7 days */
+    .grid.day {
+      grid-template-columns: 1fr;
+    }
+
+    /* Day view: 1 day */
+    .cell.week,
+    .cell.day {
+      min-height: 150px;
+    }
+
+    /* Taller cells for better task visibility */
+    .tasks {
+      max-height: none;
+    }
+
+    /* Allow tasks to expand fully */
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal {
+      background: #fff;
+      padding: 18px;
+      border-radius: 10px;
+      min-width: 300px;
+      box-shadow: 0 8px 30px rgba(2, 6, 23, 0.2)
+    }
+
+    .modal h3 {
+      margin: 0 0 8px
+    }
+
+    .modal .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px
+    }
+
+    @media (max-width:600px) {
+      .cell {
+        min-height: 100px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Calendar To-Do</h1>
+    <div class="input-area">
+      <input id="taskInput" class="task-input" placeholder="Write a task... (required)" />
+      <div class="controls">
+        <input id="taskDate" type="date" />
+        <button id="saveBtn" class="btn">Save</button>
+      </div>
+    </div>
+
+    <div class="calendar">
+      <div class="cal-header">
+        <div class="month-nav">
+          <button id="prev" class="btn" style="background:#e6edf3;color:var(--accent);">&lt;</button>
+          <div class="month-title" id="monthTitle"></div>
+          <button id="next" class="btn" style="background:#e6edf3;color:var(--accent);">&gt;</button>
+        </div>
+        <div class="view-nav">
+          <button id="monthView" class="btn view-btn active" data-view="month">Month</button>
+          <button id="weekView" class="btn view-btn" data-view="week">Week</button>
+          <button id="dayView" class="btn view-btn" data-view="day">Day</button>
+        </div>
+        <div><small style="color:var(--muted)">Today: <span id="todaySpan"></span></small></div>
+      </div>
+      <div class="grid" id="calendarGrid">
+        <!-- day names and cells injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Alert</h3>
+      <div id="modalBody">Message</div>
+      <div class="actions"><button id="modalOk" class="btn" style="background:var(--accent);margin-top:8px">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Helper: show modal
+    function showModal(title, msg) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = msg;
+      const m = document.getElementById('modal');
+      m.style.display = 'flex';
+    }
+    document.getElementById('modalOk').addEventListener('click', () => { document.getElementById('modal').style.display = 'none' });
+
+    // initialize date input to today
+    (function init() {
+      const today = new Date();
+      const iso = today.toISOString().slice(0, 10);
+      document.getElementById('taskDate').value = iso;
+      document.getElementById('todaySpan').textContent = iso;
+    })();
+
+    // Calendar rendering
+    let viewMonth = new Date().getMonth() + 1; // 1..12
+    let viewYear = new Date().getFullYear();
+    let tasks = {}; // tasks keyed by date string YYYY-MM-DD
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+      // day names
+      dayNames.forEach(dn => { const el = document.createElement('div'); el.className = 'day-name'; el.textContent = dn; grid.appendChild(el) });
+      const first = new Date(viewYear, viewMonth - 1, 1);
+      const startDay = first.getDay();
+      const lastDay = new Date(viewYear, viewMonth, 0).getDate();
+      // previous month's tail
+      const prevLast = new Date(viewYear, viewMonth - 1, 0).getDate();
+      const totalCells = 42; // 6 weeks
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div'); cell.className = 'cell';
+        const dayIndex = i - startDay + 1;
+        let cellDate = null;
+        if (i < startDay) {
+          // prev month
+          const d = prevLast - (startDay - i - 1);
+          cell.classList.add('inactive');
+          const dd = new Date(viewYear, viewMonth - 2, d);
+          cellDate = toYMD(dd);
+          cell.innerHTML = `<div class="date-num">${d}</div>`;
+        } else if (dayIndex > lastDay) {
+          // next month
+          const d = dayIndex - lastDay;
+          cell.classList.add('inactive');
+          const dd = new Date(viewYear, viewMonth, d);
+          cellDate = toYMD(dd);
+          cell.innerHTML = `<div class="date-num">${d}</div>`;
+        } else {
+          const d = dayIndex;
+          const dd = new Date(viewYear, viewMonth - 1, d);
+          cellDate = toYMD(dd);
+          cell.innerHTML = `<div class="date-num">${d}</div>`;
+        }
+        // attach tasks container
+        const tasksDiv = document.createElement('div'); tasksDiv.className = 'tasks';
+        const arr = tasks[cellDate] || [];
+        arr.forEach(t => {
+          const tdiv = document.createElement('div'); tdiv.className = 'task' + (t.completed == 1 ? ' completed' : '');
+          tdiv.dataset.id = t.id;
+          tdiv.innerHTML = `<input type="checkbox" ${t.completed == 1 ? 'checked' : ''} data-id="${t.id}" class="chk" /> <div class="text">${escapeHtml(t.task_text)}</div>`;
+          tasksDiv.appendChild(tdiv);
+        });
+        cell.appendChild(tasksDiv);
+        grid.appendChild(cell);
+      }
+      document.getElementById('monthTitle').textContent = new Date(viewYear, viewMonth - 1, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
+      // bind checkbox events
+      document.querySelectorAll('.chk').forEach(ch => {
+        ch.addEventListener('change', function () {
+          const id = this.dataset.id; const completed = this.checked ? 1 : 0;
+          fetch('', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'action=toggle&id=' + encodeURIComponent(id) + '&completed=' + encodeURIComponent(completed) })
+            .then(r => r.json()).then(res => { if (!res.ok) showModal('Error', 'Failed to update'); else fetchTasks(); });
+        });
+      });
+    }
+
+    function toYMD(d) { return d.getFullYear().toString().padStart(4, '0') + '-' + (d.getMonth() + 1).toString().padStart(2, '0') + '-' + d.getDate().toString().padStart(2, '0'); }
+    function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+    function fetchTasks() {
+      fetch('?action=fetch&month=' + viewMonth + '&year=' + viewYear).then(r => r.json()).then(data => {
+        if (!data.ok) { showModal('Error', 'Failed to load tasks'); return; }
+        tasks = {};
+        data.tasks.forEach(t => { if (!tasks[t.task_date]) tasks[t.task_date] = []; tasks[t.task_date].push(t); });
+        renderCalendar();
+      });
+    }
+
+    // navigation
+    document.getElementById('prev').addEventListener('click', () => {
+      viewMonth--; if (viewMonth < 1) { viewMonth = 12; viewYear--; } fetchTasks();
+    });
+    document.getElementById('next').addEventListener('click', () => { viewMonth++; if (viewMonth > 12) { viewMonth = 1; viewYear++; } fetchTasks(); });
+
+    // save button
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const task = document.getElementById('taskInput').value.trim();
+      const date = document.getElementById('taskDate').value;
+      if (task === '') { showModal('Validation', 'No insert please try again.'); return; }
+      if (!date) { showModal('Validation', 'Insert valid date.'); return; }
+      const sel = new Date(date + 'T00:00:00');
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (sel < today) { showModal('Validation', 'Insert valid date.'); return; }
+      // submit via fetch
+      const fd = new URLSearchParams(); fd.append('action', 'save'); fd.append('task', task); fd.append('date', date);
+      fetch('', { method: 'POST', body: fd }).then(r => r.json()).then(res => {
+        if (!res.ok) { showModal('Error', res.msg || 'Save failed'); }
+        else {
+          document.getElementById('taskInput').value = '';
+          // if saved date is in current view month, refresh; else switch to that month
+          const d = new Date(date + 'T00:00:00');
+          const m = d.getMonth() + 1; const y = d.getFullYear();
+          viewMonth = m; viewYear = y; fetchTasks();
+        }
+      }).catch(() => showModal('Error', 'Save failed'));
+    });
+
+
+    
+    // fetch initial tasks and render
+    fetchTasks();
+
+
+    
+  </script>
+</body>
+
+</html>
