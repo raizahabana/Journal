@@ -26,6 +26,10 @@ Javascript
 Node.js
 Express.js
 
+Features:
+Log in
+Sign Up
+
 API:
 POST
 PUT
