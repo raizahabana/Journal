@@ -1,5 +1,5 @@
 <?php
-define('BASE_PATH', __DIR__ . '/./');
+define('BASE_PATH', __DIR__ . '/../../');
 define('BASE_URL', '/Journal/');
 ?>
 <!doctype html>
@@ -8,7 +8,7 @@ define('BASE_URL', '/Journal/');
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HTML Element</title>
+  <title>bbb</title>
   <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/logos/favicon.png" />
   <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/styles.min.css" />
 </head>
@@ -47,7 +47,7 @@ define('BASE_URL', '/Journal/');
 
 
     <!-- Sidebar Start -->
-     <?php include BASE_PATH . 'include/navbar-part/sidebar.php'; ?>
+     <?php include BASE_PATH . '/../include/navbar-part/sidebar.php'; ?>
     <!--  Sidebar End -->
 
 
@@ -55,14 +55,14 @@ define('BASE_URL', '/Journal/');
     <div class="body-wrapper">
 
       <!--  Header Start -->
-      <?php include BASE_PATH . 'include/navbar-part/header.php'; ?>
+      <?php include BASE_PATH . '/../include/navbar-part/header.php'; ?>
       <!--  Header End -->
 
       <div class="body-wrapper-inner">
         <div class="container-fluid">
 
           <!--  Pages Start -->
-          <?php include BASE_PATH . 'include/pages/dashboard.php'; ?>
+          <?php include BASE_PATH . '/../include/pages/dashboard.php'; ?>
           <!--  Pages End -->
 
         </div>
@@ -70,6 +70,7 @@ define('BASE_URL', '/Journal/');
 
     </div>
   </div>
+
   <script src="<?php echo BASE_URL; ?>assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo BASE_URL; ?>assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="<?php echo BASE_URL; ?>assets/js/sidebarmenu.js"></script>
@@ -80,7 +81,7 @@ define('BASE_URL', '/Journal/');
   <script src="<?php echo BASE_URL; ?>assets/js/navbar.js"></script>
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-          <?php include BASE_PATH . 'include/pages/bottom.php'; ?>
+          <?php include BASE_PATH . '/../include/pages/bottom.php'; ?>
 
 
 </body>

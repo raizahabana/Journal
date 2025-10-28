@@ -1,0 +1,73 @@
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-components" href="#"><i class="ti ti-components mx-2"></i> components</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-shopping-cart fs-5" href="#"><i class="ti ti-shopping-cart fs-5 mx-2"></i> shopping-cart fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-x fs-6" href="#"><i class="ti ti-x fs-6 mx-2"></i> x fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-atom" href="#"><i class="ti ti-atom mx-2"></i> atom</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-aperture" href="#"><i class="ti ti-aperture mx-2"></i> aperture</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-shopping-cart" href="#"><i class="ti ti-shopping-cart mx-2"></i> shopping-cart</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-layout-grid" href="#"><i class="ti ti-layout-grid mx-2"></i> layout-grid</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-circle" href="#"><i class="ti ti-circle mx-2"></i> circle</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-donut-3" href="#"><i class="ti ti-chart-donut-3 mx-2"></i> chart-donut-3</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-user-circle" href="#"><i class="ti ti-user-circle mx-2"></i> user-circle</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-mail" href="#"><i class="ti ti-mail mx-2"></i> mail</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-basket" href="#"><i class="ti ti-basket mx-2"></i> basket</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-calendar" href="#"><i class="ti ti-calendar mx-2"></i> calendar</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-layout-kanban" href="#"><i class="ti ti-layout-kanban mx-2"></i> layout-kanban</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-message-dots" href="#"><i class="ti ti-message-dots mx-2"></i> message-dots</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-notes" href="#"><i class="ti ti-notes mx-2"></i> notes</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-phone" href="#"><i class="ti ti-phone mx-2"></i> phone</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-list-details" href="#"><i class="ti ti-list-details mx-2"></i> list-details</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-file-text" href="#"><i class="ti ti-file-text mx-2"></i> file-text</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-accessible" href="#"><i class="ti ti-accessible mx-2"></i> accessible</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-user-search" href="#"><i class="ti ti-user-search mx-2"></i> user-search</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-brand-google-photos" href="#"><i class="ti ti-brand-google-photos mx-2"></i> brand-google-photos</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-masks-theater" href="#"><i class="ti ti-masks-theater mx-2"></i> masks-theater</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-sort-ascending" href="#"><i class="ti ti-sort-ascending mx-2"></i> sort-ascending</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-currency-dollar" href="#"><i class="ti ti-currency-dollar mx-2"></i> currency-dollar</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-help" href="#"><i class="ti ti-help mx-2"></i> help</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-app-window" href="#"><i class="ti ti-app-window mx-2"></i> app-window</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-layout" href="#"><i class="ti ti-layout mx-2"></i> layout</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-layers-subtract" href="#"><i class="ti ti-layers-subtract mx-2"></i> layers-subtract</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-alert-circle" href="#"><i class="ti ti-alert-circle mx-2"></i> alert-circle</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-cards" href="#"><i class="ti ti-cards mx-2"></i> cards</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-typography" href="#"><i class="ti ti-typography mx-2"></i> typography</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-cards" href="#"><i class="ti ti-cards mx-2"></i> cards</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-qrcode" href="#"><i class="ti ti-qrcode mx-2"></i> qrcode</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-files" href="#"><i class="ti ti-files mx-2"></i> files</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-file-pencil" href="#"><i class="ti ti-file-pencil mx-2"></i> file-pencil</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-topology-star-3" href="#"><i class="ti ti-topology-star-3 mx-2"></i> topology-star-3</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-layout-sidebar" href="#"><i class="ti ti-layout-sidebar mx-2"></i> layout-sidebar</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-air-conditioning-disabled" href="#"><i class="ti ti-air-conditioning-disabled mx-2"></i> air-conditioning-disabled</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-line" href="#"><i class="ti ti-chart-line mx-2"></i> chart-line</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-area" href="#"><i class="ti ti-chart-area mx-2"></i> chart-area</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-bar" href="#"><i class="ti ti-chart-bar mx-2"></i> chart-bar</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-arcs" href="#"><i class="ti ti-chart-arcs mx-2"></i> chart-arcs</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-chart-radar" href="#"><i class="ti ti-chart-radar mx-2"></i> chart-radar</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-login" href="#"><i class="ti ti-login mx-2"></i> login</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-user-plus" href="#"><i class="ti ti-user-plus mx-2"></i> user-plus</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-rotate" href="#"><i class="ti ti-rotate mx-2"></i> rotate</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-zoom-code" href="#"><i class="ti ti-zoom-code mx-2"></i> zoom-code</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-settings" href="#"><i class="ti ti-settings mx-2"></i> settings</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-mood-smile" href="#"><i class="ti ti-mood-smile mx-2"></i> mood-smile</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-archive" href="#"><i class="ti ti-archive mx-2"></i> archive</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-file" href="#"><i class="ti ti-file mx-2"></i> file</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-menu-2" href="#"><i class="ti ti-menu-2 mx-2"></i> menu-2</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-bell" href="#"><i class="ti ti-bell mx-2"></i> bell</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-user fs-6" href="#"><i class="ti ti-user fs-6 mx-2"></i> user fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-mail fs-6" href="#"><i class="ti ti-mail fs-6 mx-2"></i> mail fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-list-check fs-6" href="#"><i class="ti ti-list-check fs-6 mx-2"></i> list-check fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-dots fs-7" href="#"><i class="ti ti-dots fs-7 mx-2"></i> dots fs-7</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-shopping-cart fs-6" href="#"><i class="ti ti-shopping-cart fs-6 mx-2"></i> shopping-cart fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-star fs-6" href="#"><i class="ti ti-star fs-6 mx-2"></i> star fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-message-dots fs-6" href="#"><i class="ti ti-message-dots fs-6 mx-2"></i> message-dots fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-diamond fs-6" href="#"><i class="ti ti-diamond fs-6 mx-2"></i> diamond fs-6</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-edit fs-5" href="#"><i class="ti ti-edit fs-5 mx-2"></i> edit fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-check fs-5" href="#"><i class="ti ti-check fs-5 mx-2"></i> check fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-heart fs-5" href="#"><i class="ti ti-heart fs-5 mx-2"></i> heart fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-circle-x fs-5" href="#"><i class="ti ti-circle-x fs-5 mx-2"></i> circle-x fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-heart text-danger fs-5" href="#"><i class="ti ti-heart text-danger fs-5 mx-2"></i> heart text-danger fs-5</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-sun-high fs-4" href="#"><i class="ti ti-sun-high fs-4 mx-2"></i> sun-high fs-4</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-cloud fs-4" href="#"><i class="ti ti-cloud fs-4 mx-2"></i> cloud fs-4</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-cloud-rain fs-4" href="#"><i class="ti ti-cloud-rain fs-4 mx-2"></i> cloud-rain fs-4</a></li>
+<li><a class="dropdown-item d-flex align-items-center" data-value="ti ti-cloud-snow fs-4" href="#"><i class="ti ti-cloud-snow fs-4 mx-2"></i> cloud-snow fs-4</a></li>
+
+

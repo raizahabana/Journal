@@ -1,5 +1,41 @@
 <?php
-define('BASE_PATH', __DIR__ . '/./');
+// add_sidebar_items.php
+header('Content-Type: application/json');
+
+// Database connection (edit as needed)
+$conn = mysqli_connect("localhost", "root", "", "journal");
+if (!$conn) {
+  echo json_encode(["success" => false, "message" => "Database connection failed."]);
+  exit;
+}
+
+$itemName = $_POST['itemName'] ?? '';
+$headerId = $_POST['headerId'] ?? '';
+$href = $_POST['href'] ?? '';
+$icon = $_POST['icon'] ?? '';
+
+if (!$itemName || !$headerId || !$href || !$icon) {
+  echo json_encode(["success" => false, "message" => "Missing required fields."]);
+  exit;
+}
+
+// ✅ Ensure file and folder creation
+$baseDir = __DIR__; // current directory (where this PHP is)
+$filePath = $baseDir . '/' . $href; // example: "pages/dashboard.php"
+
+$folderPath = dirname($filePath);
+if (!is_dir($folderPath)) {
+  if (!mkdir($folderPath, 0777, true)) {
+    echo json_encode(["success" => false, "message" => "Failed to create folder: $folderPath"]);
+    exit;
+  }
+}
+
+// ✅ Create the PHP file if not existing
+if (!file_exists($filePath)) {
+  $content = <<<PHP
+<?php
+define('BASE_PATH', __DIR__ . '/../../');
 define('BASE_URL', '/Journal/');
 ?>
 <!doctype html>
@@ -8,7 +44,7 @@ define('BASE_URL', '/Journal/');
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HTML Element</title>
+  <title>{$itemName}</title>
   <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/logos/favicon.png" />
   <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/styles.min.css" />
 </head>
@@ -47,7 +83,7 @@ define('BASE_URL', '/Journal/');
 
 
     <!-- Sidebar Start -->
-     <?php include BASE_PATH . 'include/navbar-part/sidebar.php'; ?>
+     <?php include BASE_PATH . '/../include/navbar-part/sidebar.php'; ?>
     <!--  Sidebar End -->
 
 
@@ -55,14 +91,14 @@ define('BASE_URL', '/Journal/');
     <div class="body-wrapper">
 
       <!--  Header Start -->
-      <?php include BASE_PATH . 'include/navbar-part/header.php'; ?>
+      <?php include BASE_PATH . '/../include/navbar-part/header.php'; ?>
       <!--  Header End -->
 
       <div class="body-wrapper-inner">
         <div class="container-fluid">
 
           <!--  Pages Start -->
-          <?php include BASE_PATH . 'include/pages/dashboard.php'; ?>
+          <?php include BASE_PATH . '/../include/pages/dashboard.php'; ?>
           <!--  Pages End -->
 
         </div>
@@ -70,6 +106,7 @@ define('BASE_URL', '/Journal/');
 
     </div>
   </div>
+
   <script src="<?php echo BASE_URL; ?>assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo BASE_URL; ?>assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="<?php echo BASE_URL; ?>assets/js/sidebarmenu.js"></script>
@@ -80,9 +117,29 @@ define('BASE_URL', '/Journal/');
   <script src="<?php echo BASE_URL; ?>assets/js/navbar.js"></script>
   <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-          <?php include BASE_PATH . 'include/pages/bottom.php'; ?>
+          <?php include BASE_PATH . '/../include/pages/bottom.php'; ?>
 
 
 </body>
 
 </html>
+
+PHP;
+
+  if (file_put_contents($filePath, $content) === false) {
+    echo json_encode(["success" => false, "message" => "Failed to create file: $href"]);
+    exit;
+  }
+}
+
+// ✅ Insert into database
+$sql = "INSERT INTO sidebar (name, parent_id, href, icon, type) 
+        VALUES ('$itemName', '$headerId', '$href', '$icon', 'item')";
+if (mysqli_query($conn, $sql)) {
+  echo json_encode(["success" => true, "message" => "Sidebar item added and file created."]);
+} else {
+  echo json_encode(["success" => false, "message" => "Database insert failed: " . mysqli_error($conn)]);
+}
+
+mysqli_close($conn);
+?>
