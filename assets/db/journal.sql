@@ -1,0 +1,41 @@
+DROP TABLE IF EXISTS sidebar;
+
+CREATE TABLE sidebar (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  parent_id INT(11) DEFAULT NULL,
+  href VARCHAR(255) DEFAULT NULL,
+  icon VARCHAR(255) DEFAULT NULL,
+  type ENUM('header', 'item', 'sublist') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS notebook;
+
+CREATE TABLE notebook (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  note TEXT,
+  code TEXT,
+  style TEXT,
+  table_array TEXT,
+  images TEXT,
+  url VARCHAR(255)
+);
+
+
+
+DROP TABLE IF EXISTS tasks;
+
+CREATE TABLE tasks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  task_text VARCHAR(255) NOT NULL,
+  task_date DATE NOT NULL,
+  task_status VARCHAR(255) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+

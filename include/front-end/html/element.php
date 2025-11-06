@@ -32,9 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $images_json = json_encode($uploaded_files);
 
+  $url = mysqli_real_escape_string($conn, $_POST['url']);
   // Insert into database
-  $sql = "INSERT INTO notebook (title, note, code, images) 
-          VALUES ('$title', '$note', '$code', '$images_json')";
+
+  $sql = "INSERT INTO notebook (title, note, code, images, url) 
+        VALUES ('$title', '$note', '$code', '$images_json', '$url')";
   if (mysqli_query($conn, $sql)) {
     echo "success";
   } else {
@@ -134,13 +136,13 @@ define('BASE_URL', '/Journal/');
 
           <!--  Pages Start -->
           <!--  Row 1 -->
+          <!-- Button Row -->
           <div class="row mb-5">
             <div class="col-lg-10">
-              <!-- Here will be add new buttons -->
-              <div class="d-flex flex-wrap gap-3 justify-content-start">
-                <button id="newBtnName" class="btn btn-warning btn-sm">New title</button>
-              </div>
+              <!-- Container where new button will be added -->
+              <div class="d-flex flex-wrap gap-3 justify-content-start" id="buttonContainer"></div>
             </div>
+
             <div class="col-lg-2">
               <div class="d-flex flex-wrap gap-3 justify-content-end">
                 <button id="addBtn" class="btn btn-success btn-sm w-50 w-md-25 w-lg-25">ADD</button>
@@ -150,8 +152,8 @@ define('BASE_URL', '/Journal/');
 
           <form id="uploadForm" enctype="multipart/form-data">
 
-            <!-- TITLE -->
-            <div class="row">
+            <!-- INSERT TITLE (Hidden Initially) -->
+            <div class="row" id="insertTitleRow" style="display: none;">
               <div class="col-lg-12">
                 <div class="card w-100">
                   <div class="card-body">
@@ -159,23 +161,18 @@ define('BASE_URL', '/Journal/');
                       <div class="col-lg-6">
                         <h4 class="card-title">Insert Title</h4>
                         <input type="text" name="title" id="title" class="form-control w-50" placeholder="Enter title"
-                          required>
+                          required />
+                        <input type="hidden" name="url" id="url" />
                       </div>
                       <div class="col-lg-6">
-                        <div class="d-flex flex-wrap gap-3 justify-content-start">
+                        <div class="d-flex flex-wrap gap-3 justify-content-center mb-2">
                           <button id="unhideNote" class="btn btn-success btn-sm">Add Note</button>
-                        </div>
-                        <div class="d-flex flex-wrap gap-3 justify-content-start">
                           <button id="unhideCode" class="btn btn-success btn-sm">Add Code</button>
-                        </div>
-                        <div class="d-flex flex-wrap gap-3 justify-content-start">
                           <button id="unhideImages" class="btn btn-success btn-sm">Add Images</button>
                         </div>
                       </div>
                     </div>
                   </div>
-
-
                 </div>
               </div>
             </div>
@@ -183,9 +180,15 @@ define('BASE_URL', '/Journal/');
             <!-- NOTE & IMAGES -->
             <div class="row mt-3">
               <!-- NOTE -->
-              <div class="col-lg-6">
+              <div class="col-lg-6" id="noteCard" style="display: none;">
                 <div class="card w-100">
-                  <div class="card-body">
+                  <div class="card-body position-relative">
+                    <!-- Minus Button -->
+                    <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 text-danger"
+                      id="hideNoteBtn" title="Hide Note">
+                      <i class="ti ti-minus"></i>
+                    </button>
+
                     <h4 class="card-title">Insert Note</h4>
                     <p class="card-subtitle">Add important information here</p>
                     <textarea name="note" id="note" class="form-control w-100" style="height: 155px;"
@@ -195,9 +198,15 @@ define('BASE_URL', '/Journal/');
               </div>
 
               <!-- IMAGES -->
-              <div class="col-lg-6">
+              <div class="col-lg-6" id="imagesCard" style="display: none;">
                 <div class="card overflow-hidden">
-                  <div class="card-body pb-0">
+                  <div class="card-body pb-0 position-relative">
+                    <!-- Minus Button -->
+                    <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 text-danger"
+                      id="hideImagesBtn" title="Hide Images">
+                      <i class="ti ti-minus"></i>
+                    </button>
+
                     <h4 class="card-title">Upload More Images</h4>
                     <p class="card-subtitle">Accepted formats: JPEG, JPG, PNG</p>
                     <hr />
@@ -205,7 +214,7 @@ define('BASE_URL', '/Journal/');
                     <div class="mt-4 pb-3 d-flex align-items-center" style="height: 100px;">
                       <label class="btn btn-primary rounded-circle round-48 hstack justify-content-center mb-0">
                         <i class="ti ti-upload fs-6"></i>
-                        <input type="file" id="imageInput" name="images[]" accept="image/*" multiple hidden>
+                        <input type="file" id="imageInput" name="images[]" accept="image/*" multiple hidden />
                       </label>
                       <div class="ms-3">
                         <h5 class="mb-0 fw-bolder fs-4">Choose Files</h5>
@@ -221,17 +230,22 @@ define('BASE_URL', '/Journal/');
                       style="overflow-x: auto; white-space: nowrap; padding: 10px; border-top: 1px solid #dee2e6;">
                       <div id="imagePreview" style="display: inline-flex; gap: 10px;"></div>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- CODE -->
-            <div class="row mt-3">
+            <div class="row mt-3" id="codeCard" style="display: none;">
               <div class="col-lg-12">
                 <div class="card w-100">
-                  <div class="card-body">
+                  <div class="card-body position-relative">
+                    <!-- Minus Button -->
+                    <button type="button" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 text-danger"
+                      id="hideCodeBtn" title="Hide Code">
+                      <i class="ti ti-minus"></i>
+                    </button>
+
                     <h4 class="card-title">Insert Code</h4>
                     <p class="card-subtitle">Add important code here</p>
                     <textarea name="code" id="code" class="form-control w-100" style="height: 100px;"
@@ -242,11 +256,12 @@ define('BASE_URL', '/Journal/');
             </div>
 
             <!-- SUBMIT BUTTON -->
-            <div class="row mt-3">
+            <div class="row mt-3" id="submitRow" style="display: none;">
               <div class="col-12 d-flex justify-content-end">
                 <button type="button" id="submit" class="btn btn-success btn-sm w-25">SUBMIT</button>
               </div>
             </div>
+
 
           </form>
 
@@ -281,6 +296,13 @@ define('BASE_URL', '/Journal/');
     // =============================
     // IMAGE PREVIEW (unchanged)
     // =============================
+
+    // Auto-fill URL field with current localhost path
+    document.addEventListener("DOMContentLoaded", function () {
+      const urlInput = document.getElementById("url");
+      urlInput.value = window.location.href; // automatically sets full URL
+    });
+
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
 
@@ -313,13 +335,113 @@ define('BASE_URL', '/Journal/');
             alert('Record added successfully!');
             document.getElementById('uploadForm').reset();
             imagePreview.innerHTML = '';
+            location.reload();
+
           } else {
             alert('Error adding record.');
+            location.reload();
+
           }
         })
         .catch(error => console.error('Error:', error));
+      location.reload();
+
     });
   </script>
+
+
+
+  <script>
+    const addBtn = document.getElementById("addBtn");
+    const buttonContainer = document.getElementById("buttonContainer");
+    const insertTitleRow = document.getElementById("insertTitleRow");
+    const titleInput = document.getElementById("title");
+
+    addBtn.addEventListener("click", () => {
+      // Check if "New title" button already exists
+      let newBtn = document.getElementById("newBtnName");
+
+      if (!newBtn) {
+        // Create the button only once
+        newBtn = document.createElement("button");
+        newBtn.id = "newBtnName";
+        newBtn.className = "btn btn-warning btn-sm";
+        newBtn.textContent = "New title";
+        buttonContainer.appendChild(newBtn);
+      }
+
+      // Show the Insert Title section
+      insertTitleRow.style.display = "block";
+
+      // Focus on title input automatically
+      titleInput.focus();
+    });
+
+    // When typing in the title input, update button text automatically
+    titleInput.addEventListener("input", () => {
+      const newBtn = document.getElementById("newBtnName");
+      if (newBtn) {
+        newBtn.textContent = titleInput.value.trim() !== "" ? titleInput.value : "New title";
+      }
+    });
+  </script>
+
+
+
+  <script>
+    // Buttons to unhide
+    const unhideNote = document.getElementById("unhideNote");
+    const unhideCode = document.getElementById("unhideCode");
+    const unhideImages = document.getElementById("unhideImages");
+
+    // Cards
+    const noteCard = document.getElementById("noteCard");
+    const codeCard = document.getElementById("codeCard");
+    const imagesCard = document.getElementById("imagesCard");
+    const submitRow = document.getElementById("submitRow");
+
+    // Hide buttons
+    const hideNoteBtn = document.getElementById("hideNoteBtn");
+    const hideCodeBtn = document.getElementById("hideCodeBtn");
+    const hideImagesBtn = document.getElementById("hideImagesBtn");
+
+    // Helper function to check visibility
+    function updateSubmitVisibility() {
+      if (
+        noteCard.style.display === "none" &&
+        codeCard.style.display === "none" &&
+        imagesCard.style.display === "none"
+      ) {
+        submitRow.style.display = "none"; // Hide submit if all closed
+      } else {
+        submitRow.style.display = "flex"; // Show submit if any open
+      }
+    }
+
+    // Function to unhide specific section
+    function showSection(section) {
+      section.style.display = "block";
+      updateSubmitVisibility();
+    }
+
+    // Function to hide specific section
+    function hideSection(section) {
+      section.style.display = "none";
+      updateSubmitVisibility();
+    }
+
+    // Unhide buttons
+    unhideNote.addEventListener("click", () => showSection(noteCard));
+    unhideCode.addEventListener("click", () => showSection(codeCard));
+    unhideImages.addEventListener("click", () => showSection(imagesCard));
+
+    // Hide buttons
+    hideNoteBtn.addEventListener("click", () => hideSection(noteCard));
+    hideCodeBtn.addEventListener("click", () => hideSection(codeCard));
+    hideImagesBtn.addEventListener("click", () => hideSection(imagesCard));
+  </script>
+
+
 
 </body>
 

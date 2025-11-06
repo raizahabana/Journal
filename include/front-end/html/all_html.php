@@ -1,42 +1,4 @@
 <?php
-header('Content-Type: application/json');
-
-// Database connection
-$conn = new mysqli("localhost", "root", "", "journal");
-if ($conn->connect_error) {
-  echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $conn->connect_error]);
-  exit;
-}
-
-// Get form values
-$item_id = intval($_POST['itemSelect'] ?? 0);
-$sublist_name = trim($_POST['sublistName'] ?? '');
-$sublist_link = trim($_POST['sidebarItemLink'] ?? ''); // e.g. "pages/reports/sales_report.php"
-
-if ($item_id <= 0 || empty($sublist_name) || empty($sublist_link)) {
-  echo json_encode(['success' => false, 'message' => 'Please fill in all fields (name and link).']);
-  exit;
-}
-
-// ✅ --- File creation logic ---
-$baseDir = __DIR__; // current folder where this PHP file is
-$filePath = $baseDir . '/' . $sublist_link;
-
-// Ensure the folder exists
-$folderPath = dirname($filePath);
-if (!is_dir($folderPath)) {
-  if (!mkdir($folderPath, 0777, true)) {
-    echo json_encode(['success' => false, 'message' => "Failed to create folder: $folderPath"]);
-    exit;
-  }
-}
-
-// Create the file if it doesn’t exist
-if (!file_exists($filePath)) {
-  $content = <<<'PHP'
-
-  
-  <?php
 $conn = mysqli_connect("localhost", "root", "", "journal");
 if (!$conn) {
   die("Connection failed: " . mysqli_connect_error());
@@ -140,22 +102,7 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <?php
-  // ✅ Define item name safely
-  $itemName = $itemName ?? basename(__FILE__, '.php'); // fallback to filename
-  
-  // ✅ Replace special characters (_ - . and others) with space
-  $itemName = preg_replace('/[_\-\.\(\)\[\]]+/', ' ', $itemName);
-
-  // ✅ Trim extra spaces
-  $itemName = trim($itemName);
-
-  // ✅ Capitalize first letter of each word
-  $itemName = ucwords($itemName);
-  ?>
-
-  <title><?php echo $itemName; ?></title>
-
+  <title><?php echo $_SERVER['REQUEST_URI'] ?></title>
   <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/logos/favicon.png" />
   <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/styles.min.css" />
 
@@ -214,11 +161,10 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     // Query all notebook names
     $query = "SELECT * FROM notebook WHERE url = '" . mysqli_real_escape_string($conn, $currentURL) . "'";
     $style_result = mysqli_query($conn, $query);
-    $result = mysqli_query($conn, $query);
 
     // Check if query succeeded
-    if (!$style_result || !$result) {
-      die("Query failed: " . mysqli_error(mysql: $conn));
+    if (!$style_result) {
+      die("Query failed: " . mysqli_error($conn));
     }
 
     // Display buttons
@@ -290,6 +236,8 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                   die("Connection failed: " . mysqli_connect_error());
                 }
 
+
+
                 // Query all notebook names
                 $query = "SELECT * FROM notebook WHERE url = '" . mysqli_real_escape_string($conn, $currentURL) . "'";
                 $result = mysqli_query($conn, $query);
@@ -329,6 +277,7 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
               </div>
             </div>
           </div>
+
           <form id="uploadForm" enctype="multipart/form-data">
 
             <!-- INSERT TITLE (Hidden Initially) -->
@@ -757,7 +706,7 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         hidden.value = JSON.stringify(tableData);
 
         const formData = new FormData(form);
-        fetch('<?php echo basename(__FILE__); ?>', {
+        fetch('all_html.php', {
           method: 'POST',
           body: formData
         })
@@ -1006,7 +955,7 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
       formData.append('id', noteId);
 
-      fetch('<?php echo basename(__FILE__); ?>', {
+      fetch('all_html.php', {
         method: 'POST',
         body: formData
       })
@@ -1024,27 +973,3 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 </body>
 
 </html>
-
-
-PHP;
-
-  if (file_put_contents($filePath, $content) === false) {
-    echo json_encode(['success' => false, 'message' => "Failed to create file: $sublist_link"]);
-    exit;
-  }
-}
-
-// ✅ --- Insert into database ---
-$stmt = $conn->prepare("INSERT INTO sidebar (parent_id, type, name, href) VALUES (?, 'sublist', ?, ?)");
-$stmt->bind_param("iss", $item_id, $sublist_name, $sublist_link);
-$result = $stmt->execute();
-
-if ($result) {
-  echo json_encode(['success' => true, 'message' => 'Sublist added and file created successfully!']);
-} else {
-  echo json_encode(['success' => false, 'message' => 'Database insert failed: ' . $conn->error]);
-}
-
-$stmt->close();
-$conn->close();
-?>

@@ -34,7 +34,7 @@
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link justify-content-between" href="#" aria-expanded="false">
+              <a class="sidebar-link justify-content-between" href="<?php echo BASE_URL ?>calendar.php" aria-expanded="false">
                 <div class="d-flex align-items-center gap-3">
                   <span class="d-flex">
                     <i class="ti ti-calendar"></i>
@@ -45,12 +45,12 @@
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link justify-content-between" href="#" aria-expanded="false">
+              <a class="sidebar-link justify-content-between" href="<?php echo BASE_URL ?>to-do.php" aria-expanded="false">
                 <div class="d-flex align-items-center gap-3">
                   <span class="d-flex">
-                    <i class="ti ti-notes"></i>
+                    <i class="ti ti-list-check fs-6"></i>
                   </span>
-                  <span class="hide-menu">Notes</span>
+                  <span class="hide-menu">To-Do</span>
                 </div>
 
               </a>

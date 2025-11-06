@@ -1,42 +1,4 @@
 <?php
-header('Content-Type: application/json');
-
-// Database connection
-$conn = new mysqli("localhost", "root", "", "journal");
-if ($conn->connect_error) {
-  echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $conn->connect_error]);
-  exit;
-}
-
-// Get form values
-$item_id = intval($_POST['itemSelect'] ?? 0);
-$sublist_name = trim($_POST['sublistName'] ?? '');
-$sublist_link = trim($_POST['sidebarItemLink'] ?? ''); // e.g. "pages/reports/sales_report.php"
-
-if ($item_id <= 0 || empty($sublist_name) || empty($sublist_link)) {
-  echo json_encode(['success' => false, 'message' => 'Please fill in all fields (name and link).']);
-  exit;
-}
-
-// ✅ --- File creation logic ---
-$baseDir = __DIR__; // current folder where this PHP file is
-$filePath = $baseDir . '/' . $sublist_link;
-
-// Ensure the folder exists
-$folderPath = dirname($filePath);
-if (!is_dir($folderPath)) {
-  if (!mkdir($folderPath, 0777, true)) {
-    echo json_encode(['success' => false, 'message' => "Failed to create folder: $folderPath"]);
-    exit;
-  }
-}
-
-// Create the file if it doesn’t exist
-if (!file_exists($filePath)) {
-  $content = <<<'PHP'
-
-  
-  <?php
 $conn = mysqli_connect("localhost", "root", "", "journal");
 if (!$conn) {
   die("Connection failed: " . mysqli_connect_error());
@@ -1024,27 +986,3 @@ $currentURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 </body>
 
 </html>
-
-
-PHP;
-
-  if (file_put_contents($filePath, $content) === false) {
-    echo json_encode(['success' => false, 'message' => "Failed to create file: $sublist_link"]);
-    exit;
-  }
-}
-
-// ✅ --- Insert into database ---
-$stmt = $conn->prepare("INSERT INTO sidebar (parent_id, type, name, href) VALUES (?, 'sublist', ?, ?)");
-$stmt->bind_param("iss", $item_id, $sublist_name, $sublist_link);
-$result = $stmt->execute();
-
-if ($result) {
-  echo json_encode(['success' => true, 'message' => 'Sublist added and file created successfully!']);
-} else {
-  echo json_encode(['success' => false, 'message' => 'Database insert failed: ' . $conn->error]);
-}
-
-$stmt->close();
-$conn->close();
-?>
