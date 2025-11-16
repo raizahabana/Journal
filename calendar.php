@@ -1,66 +1,43 @@
 <?php
-$conn = mysqli_connect("localhost", "root", "", "journal");
-if (!$conn)
-    die("Connection failed: " . mysqli_connect_error());
+$conn = new mysqli("localhost", "root", "", "journal");
+if ($conn->connect_error)
+    die("Connection failed: " . $conn->connect_error);
 
-// Get parameters
-$view = $_GET['view'] ?? 'day';
-$offset = intval($_GET['offset'] ?? 0); // Number of days/weeks/months moved
+// --- Handle Date Range (from AJAX or default) ---
+$filter = $_GET['filter'] ?? 'week'; // default = week
+$baseDate = $_GET['date'] ?? date('Y-m-d');
+$base = new DateTime($baseDate);
 
-// Base date
-$today = date('Y-m-d');
-$baseDate = date('Y-m-d', strtotime("$offset $view", strtotime($today)));
-
-// Determine date range
-if ($view === 'day') {
-    $start = $baseDate;
-    $end = $baseDate;
-} elseif ($view === 'week') {
-    $start = date('Y-m-d', strtotime("monday this week", strtotime($baseDate)));
-    $end = date('Y-m-d', strtotime("sunday this week", strtotime($baseDate)));
-} else { // month
-    $start = date('Y-m-01', strtotime($baseDate));
-    $end = date('Y-m-t', strtotime($baseDate));
+// Calculate start and end range based on filter
+switch ($filter) {
+    case 'day':
+        $startDate = $base->format('Y-m-d');
+        $endDate = $base->format('Y-m-d');
+        break;
+    case 'week':
+        $startDate = $base->modify('monday this week')->format('Y-m-d');
+        $endDate = (new DateTime($startDate))->modify('+6 days')->format('Y-m-d');
+        break;
+    case 'month':
+        $startDate = $base->format('Y-m-01');
+        $endDate = $base->format('Y-m-t');
+        break;
+    default:
+        $startDate = date('Y-m-d');
+        $endDate = date('Y-m-d');
 }
 
-// Fetch tasks from database
-$query = "SELECT * FROM tasks WHERE task_date BETWEEN '$start' AND '$end' ORDER BY task_date ASC";
-$result = mysqli_query($conn, $query);
+// --- Fetch tasks for this range ---
+$sql = "SELECT * FROM tasks WHERE task_date BETWEEN '$startDate' AND '$endDate' ORDER BY task_date ASC";
+$result = $conn->query($sql);
 
 $tasks_by_date = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    $tasks_by_date[$row['task_date']][] = $row;
-}
-
-// Generate dates for display
-$dates = [];
-$current = strtotime($start);
-while ($current <= strtotime($end)) {
-    $dates[] = date('Y-m-d', $current);
-    $current = strtotime('+1 day', $current);
-}
-
-// Calendar rendering
-foreach ($dates as $date):
-    $formattedDate = date('M d, Y', strtotime($date));
-    echo "<div class='day-box'>";
-    echo "<div class='day-title'>$formattedDate</div>";
-
-    if (!empty($tasks_by_date[$date])) {
-        foreach ($tasks_by_date[$date] as $task) {
-            $doneClass = $task['task_status'] === 'Done' ? 'task-done' : '';
-            echo "<div class='task-item $doneClass'>📝 " . htmlspecialchars($task['task_text']) . "</div>";
-        }
-    } else {
-        echo "<div class='text-muted small'>No tasks</div>";
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $tasks_by_date[$row['task_date']][] = $row;
     }
-
-    echo "</div>";
-endforeach;
+}
 ?>
-
-
-
 
 <?php
 // ==============================
@@ -81,97 +58,84 @@ define('BASE_URL', '/Journal/');
     <link rel="shortcut icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/logos/favicon.png" />
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/styles.min.css" />
 
-
     <style>
-        /* Calendar Layout */
-        .calendar {
-            display: grid;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .calendar.day {
-            grid-template-columns: repeat(1, 1fr);
-        }
-
-        .calendar.week {
-            grid-template-columns: repeat(7, 1fr);
-        }
-
-        .calendar.month {
-            grid-template-columns: repeat(7, 1fr);
-        }
-
-        /* Box Style */
-        .day-box {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 15px;
-            min-height: 180px;
+        /* --- Layout --- */
+        .calendar-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
             display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .day-box:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.12);
-        }
-
-        .day-title {
-            font-weight: 600;
-            color: #0d6efd;
-            margin-bottom: 10px;
-            font-size: 15px;
-            text-align: center;
-        }
-
-        .task-item {
-            font-size: 0.9rem;
-            border-left: 3px solid #0d6efd;
+        /* Each day box */
+        .day-column {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
             background: #f8f9fa;
-            border-radius: 5px;
+            min-height: 150px;
+            padding: 10px;
+            flex: 1 1 calc(100% / 7 - 10px);
+            /* ✅ 7 equal-width columns per row */
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: column;
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .day-column:hover {
+            background: #eef6ff;
+            transform: translateY(-2px);
+        }
+
+        /* Header of each day */
+        .day-header {
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        /* Task item inside each day */
+        .task-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 8px;
             margin-bottom: 6px;
-            padding: 4px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            font-size: 0.9rem;
         }
 
         .task-done {
             text-decoration: line-through;
-            color: gray;
-            background: #e9ecef;
+            color: #0d6efd;
         }
 
-        .filter-btn.active {
-            background-color: #0d6efd !important;
-            color: white !important;
+        /* --- Filter Buttons --- */
+        .filter-btns .btn {
+            border-radius: 50px;
+            font-weight: 500;
         }
 
-        .nav-buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+        .filter-btns .btn.active {
+            background-color: #0d6efd;
+            color: #fff;
         }
 
-        .nav-buttons button {
-            width: 40px;
-            height: 40px;
+        /* --- Navigation Buttons --- */
+        .nav-btns button {
             border-radius: 50%;
-            border: none;
-            background: #0d6efd;
-            color: white;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .nav-buttons button:hover {
-            background: #0b5ed7;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
+
 
 </head>
 
@@ -210,29 +174,50 @@ define('BASE_URL', '/Journal/');
                     <div class="row mb-4">
 
 
-                        <div class="container py-5">
-                            <h2 class="text-center mb-4">🗓 Task Calendar View</h2>
 
-                            <!-- Filter Buttons -->
-                            <div class="d-flex justify-content-center gap-3 mb-3">
-                                <button class="btn btn-outline-primary filter-btn active" data-view="day">Day</button>
-                                <button class="btn btn-outline-primary filter-btn" data-view="week">Week</button>
-                                <button class="btn btn-outline-primary filter-btn" data-view="month">Month</button>
+                        <div class="container py-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="filter-btns btn-group">
+                                    <button class="btn btn-outline-primary filter" data-filter="day">Day</button>
+                                    <button class="btn btn-outline-primary filter active"
+                                        data-filter="week">Week</button>
+                                    <button class="btn btn-outline-primary filter" data-filter="month">Month</button>
+                                </div>
+
+                                <div class="nav-btns d-flex gap-2">
+                                    <button id="prevBtn" class="btn btn-outline-secondary">&lt;</button>
+                                    <button id="nextBtn" class="btn btn-outline-secondary">&gt;</button>
+                                </div>
                             </div>
 
-                            <!-- Navigation Buttons -->
-                            <div class="nav-buttons">
-                                <button id="prevBtn">←</button>
-                                <span id="viewLabel" class="fw-semibold fs-5"></span>
-                                <button id="nextBtn">→</button>
-                            </div>
+                            <div class="calendar-container d-flex gap-2 flex-wrap">
+                                <?php
+                                // Generate days dynamically
+                                $period = new DatePeriod(
+                                    new DateTime($startDate),
+                                    new DateInterval('P1D'),
+                                    (new DateTime($endDate))->modify('+1 day')
+                                );
 
-                            <!-- Calendar Display -->
-                            <div id="calendarContainer" class="calendar day"></div>
+                                foreach ($period as $day) {
+                                    $dayKey = $day->format('Y-m-d');
+                                    echo "<div class='day-column'>";
+                                    echo "<div class='day-header'>" . $day->format('M d (D)') . "</div>";
+
+                                    if (isset($tasks_by_date[$dayKey])) {
+                                        foreach ($tasks_by_date[$dayKey] as $task) {
+                                            $done = $task['task_status'] === 'Done' ? 'task-done' : '';
+                                            echo "<div class='task-item $done'>" . htmlspecialchars($task['task_text']) . "</div>";
+                                        }
+                                    } else {
+                                        echo "<div class='text-muted small text-center mt-4'>No tasks</div>";
+                                    }
+
+                                    echo "</div>";
+                                }
+                                ?>
+                            </div>
                         </div>
-
-                      
-
 
                     </div>
                 </div>
@@ -253,31 +238,43 @@ define('BASE_URL', '/Journal/');
     <?php include BASE_PATH . 'include/pages/bottom.php'; ?>
 
     <script>
-        $(document).ready(function () {
-            loadTasks('day'); // Default view
+        let currentFilter = 'week';
+        let currentDate = '<?= date('Y-m-d', strtotime($baseDate)) ?>';
 
-            // Switch view on button click
-            $('.filter-btn').on('click', function () {
-                $('.filter-btn').removeClass('active');
-                $(this).addClass('active');
-                let view = $(this).data('view');
-                loadTasks(view);
+        // Load new range dynamically
+        function loadCalendar(filter, date) {
+            $.get('<?= basename(__FILE__) ?>', { filter, date }, function (html) {
+                const newHtml = $(html).find('.calendar-container').html();
+                $('.calendar-container').html(newHtml);
             });
+        }
 
-            function loadTasks(viewType) {
-                $.ajax({
-                    url: 'calendar.php',
-                    type: 'GET',
-                    data: { view: viewType },
-                    success: function (response) {
-                        $('#calendarContainer').html(response);
-                        $('#calendarContainer')
-                            .addClass(viewType);
-                    }
-                });
-            }
+        $('.filter').on('click', function () {
+            $('.filter').removeClass('active');
+            $(this).addClass('active');
+            currentFilter = $(this).data('filter');
+            loadCalendar(currentFilter, currentDate);
         });
+
+        $('#prevBtn').on('click', function () {
+            shiftDate(-1);
+        });
+
+        $('#nextBtn').on('click', function () {
+            shiftDate(1);
+        });
+
+        function shiftDate(direction) {
+            let d = new Date(currentDate);
+            if (currentFilter === 'day') d.setDate(d.getDate() + direction);
+            else if (currentFilter === 'week') d.setDate(d.getDate() + (7 * direction));
+            else if (currentFilter === 'month') d.setMonth(d.getMonth() + direction);
+
+            currentDate = d.toISOString().split('T')[0];
+            loadCalendar(currentFilter, currentDate);
+        }
     </script>
+
 
 </body>
 

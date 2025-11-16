@@ -59,6 +59,24 @@ $tasks_by_date = [];
 while ($row = $result->fetch_assoc()) {
   $tasks_by_date[$row['task_date']][] = $row;
 }
+
+
+// ==============================
+// ✅ Delete Task via AJAX
+// ==============================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_task'])) {
+  $task_id = $_POST['task_id'];
+
+  $conn = new mysqli("localhost", "root", "", "journal");
+  if ($conn->connect_error)
+    die("Connection failed: " . $conn->connect_error);
+
+  $sql = "DELETE FROM tasks WHERE id=$task_id";
+  echo $conn->query($sql) ? "✅ Task deleted successfully!" : "❌ Error deleting task.";
+  $conn->close();
+  exit;
+}
+
 $conn->close();
 ?>
 
@@ -265,36 +283,49 @@ define('BASE_URL', '/Journal/');
             </div>
           </div>
 
-          <!-- DISPLAY ALL THE TASKS -->
-          <?php if (!empty($tasks_by_date)): ?>
-            <?php foreach ($tasks_by_date as $date => $tasks): ?>
-              <div class="task-card">
-                <h5 class="text-primary mb-3 d-flex align-items-center gap-2">
-                  <iconify-icon icon="mdi:calendar"></iconify-icon>
-                  <?= date("F d, Y", strtotime($date)); ?>
-                </h5>
+          <?php foreach ($tasks_by_date as $date => $tasks): ?>
+            <div class="task-card">
+              <h5 class="text-primary mb-3 d-flex align-items-center gap-2">
+                <iconify-icon icon="mdi:calendar"></iconify-icon>
+                <?= date("F d, Y", strtotime($date)); ?>
+              </h5>
 
-                <?php foreach ($tasks as $task): ?>
-                  <div class="task-item">
-                    <label class="custom-checkbox d-flex align-items-center mx-3 mb-0">
-                      <input type="checkbox" class="task-checkbox" data-id="<?= $task['id']; ?>"
-                        <?= $task['task_status'] === 'Done' ? 'checked' : ''; ?>>
-                      <span class="checkmark"></span>
-                      <span class="task-text <?= $task['task_status'] === 'Done' ? 'task-done' : ''; ?>">
-                        <?= htmlspecialchars($task['task_text']); ?>
-                      </span>
-                    </label>
+              <?php foreach ($tasks as $task): ?>
+                <?php
+                $today = date('Y-m-d');
+                // ✅ Determine status with Over Due logic
+                if ($task['task_status'] !== 'Done' && $task['task_date'] < $today) {
+                  $task['task_status'] = 'Over Due';
+                  $badgeClass = 'bg-danger';
+                } elseif ($task['task_status'] === 'Done') {
+                  $badgeClass = 'bg-success';
+                } else {
+                  $badgeClass = 'bg-warning';
+                }
+                ?>
 
-                    <span class="badge <?= $task['task_status'] === 'Done' ? 'bg-success' : 'bg-warning'; ?>">
+                <div class="task-item">
+                  <label class="custom-checkbox d-flex align-items-center mx-3 mb-0">
+                    <input type="checkbox" class="task-checkbox" data-id="<?= $task['id']; ?>"
+                      <?= $task['task_status'] === 'Done' ? 'checked' : ''; ?>     <?= $task['task_status'] === 'Over Due' ? '' : ''; ?>>
+                    <span class="checkmark"></span>
+                    <span class="task-text <?= $task['task_status'] === 'Done' ? 'task-done' : ''; ?>">
+                      <?= htmlspecialchars($task['task_text']); ?>
+                    </span>
+                  </label>
+
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge <?= $badgeClass; ?>">
                       <?= $task['task_status']; ?>
                     </span>
+                    <button class="btn btn-sm btn-outline-danger delete-task" data-id="<?= $task['id']; ?>">
+                      <iconify-icon icon="mdi:delete"></iconify-icon>
+                    </button>
                   </div>
-                <?php endforeach; ?>
-              </div>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <div class="alert alert-info">No tasks found. Add one to get started!</div>
-          <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endforeach; ?>
 
 
 
@@ -359,6 +390,27 @@ define('BASE_URL', '/Journal/');
             });
           });
         });
+
+
+        // 🗑️ Delete task
+        $(document).on('click', '.delete-task', function () {
+          if (!confirm('Are you sure you want to delete this task?')) return;
+
+          const id = $(this).data('id');
+          $.ajax({
+            url: 'to-do.php',
+            type: 'POST',
+            data: { delete_task: true, task_id: id },
+            success: function (response) {
+              alert(response);
+              location.reload();
+            },
+            error: function () {
+              alert('Error deleting task.');
+            }
+          });
+        });
+
       </script>
 
 </body>

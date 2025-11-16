@@ -1,3 +1,6 @@
+
+CREATE DATABASE journal;
+
 DROP TABLE IF EXISTS sidebar;
 
 CREATE TABLE sidebar (
